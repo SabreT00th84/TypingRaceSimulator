@@ -103,6 +103,11 @@ public class TypingRace
                 finished = true;
             }
 
+            //Reset each typist mistype status before ending each turn.
+            seat1Typist.resetMistype();
+            seat2Typist.resetMistype();
+            seat3Typist.resetMistype();
+
             // Wait 200ms between turns so the animation is visible
             try {
                 TimeUnit.MILLISECONDS.sleep(200);
@@ -248,6 +253,13 @@ public class TypingRace
             spacesAfter--; // symbol + ~ together take two characters
         }
 
+        // Append < when just mistyped so the state is visible without hiding identity.
+        if (theTypist.hasJustMistyped())
+        {
+            System.out.print('<');
+            spacesAfter--; // symbol + < together take two characters
+        }
+
         multiplePrint(' ', spacesAfter);
         System.out.print('|');
         System.out.print(' ');
@@ -258,6 +270,12 @@ public class TypingRace
             System.out.print(theTypist.getName()
                 + " (Accuracy: " + theTypist.getAccuracy() + ")"
                 + " BURNT OUT (" + theTypist.getBurnoutTurnsRemaining() + " turns)");
+        }
+        else if (theTypist.hasJustMistyped())
+        {
+            System.out.print(theTypist.getName()
+                + " (Accuracy: " + theTypist.getAccuracy() + ")"
+                + " ← just mistyped");
         }
         else
         {

@@ -23,6 +23,7 @@ public class Typist
     private boolean burntOut;
     private int burnoutRemaining;
     private double accuracy;
+    private boolean justMistypyed;
 
 
 
@@ -43,6 +44,7 @@ public class Typist
         this.progress = 0;
         this.burntOut = false;
         this.burnoutRemaining = 0;
+        this.justMistypyed = false;
     }
 
 
@@ -138,6 +140,7 @@ public class Typist
         progress = 0;
         burntOut = false;
         burnoutRemaining = 0;
+        justMistypyed = false;
     }
 
     /**
@@ -167,6 +170,7 @@ public class Typist
      */
     public void slideBack(int amount)
     {
+        justMistypyed = true;
         if ((progress - amount) < 0) {
             progress = 0;
         } else {
@@ -201,4 +205,19 @@ public class Typist
         symbol = newSymbol;
     }
 
+    /**
+     * Sets the typists status to just mistyped
+     */
+    public boolean hasJustMistyped()
+    {
+        return justMistypyed;
+    }
+
+    /**
+     * Resets the typist's status to not just mistyped
+     */
+    public void resetMistype()
+    {
+        justMistypyed = false;
+    } 
 }
