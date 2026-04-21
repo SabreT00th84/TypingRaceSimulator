@@ -19,12 +19,14 @@ public abstract class View {
     }
 
     /**
-     * An abstract method to allow subclasses to initialise
+     * A method to allow subclasses to initialise
      * subclass variables without needing to use the constructor.
+     * Does nothing by default, but subclasses should override
+     * this method if they need to initialise class variables.
      *
      * @param o 0 or more objects passed in from the constructor.
      */
-    protected abstract void init(Object... o);
+    protected void init(Object... o) {}
 
     /**
      * An abstract method to allow subclasses to define
