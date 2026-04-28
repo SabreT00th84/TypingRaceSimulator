@@ -2,26 +2,9 @@ package Part2.ViewModels;
 
 import Part2.Models.RaceConfig;
 import Part2.Models.Typist;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 
 public class SetupTypistsViewModel {
-    private final Map<String, Double> styles = new LinkedHashMap<>();
-    {
-        styles.put("Touch Typist (90% Accuracy, Higher chance of burnout)", 0.90);
-        styles.put("Hunt & Peck (70% Accuracy, Medium chance of burnout)", 0.70);
-        styles.put("Phone Thumbs (50% Accuracy, Lower chance of burnout)", 0.50);
-        styles.put("Voice-to-Text (30% Accuracy, Very low chance of burnout)", 0.30);
-    }
-    private final Map<String, Double[]> keyboards = new LinkedHashMap<>();
-    {
-        keyboards.put("Touchscreen (-5% Accuracy, 1 character per turn)", new Double[] {-0.10, 1.0});
-        keyboards.put("Membrane (+0% Accuracy, 1 character per turn)", new Double[] {0.00, 1.0});
-        keyboards.put("Mechanical (+5% Accuracy, 2 character per turn)", new Double[] {0.05, 2.0});
-        keyboards.put("Stenographic (+10% Accuracy, 3 character per turn)", new Double[] {0.10, 3.0});
-    }
     private final RaceConfig config;
     private final Typist[] typists;
 
@@ -31,23 +14,23 @@ public class SetupTypistsViewModel {
     }
 
     public Set<String> getStyles() {
-        return styles.keySet();
+        return Typist.typingStyles.keySet();
     }
 
     public double getStyleAccuracy(String style) {
-        return styles.get(style);
+        return Typist.typingStyles.get(style);
     }
 
     public double getKeyboardAccuracy(String keyboard) {
-        return keyboards.get(keyboard)[0];
+        return Typist.keyboardTypes.get(keyboard)[0];
     }
 
     public int getKeyboardSpeed(String keyboard) {
-        return keyboards.get(keyboard)[1].intValue();
+        return Typist.keyboardTypes.get(keyboard)[1].intValue();
     }
 
     public Set<String> getKeyboards() {
-        return keyboards.keySet();
+        return Typist.keyboardTypes.keySet();
     }
 
     public RaceConfig getConfig() {
