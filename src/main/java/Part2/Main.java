@@ -26,6 +26,8 @@ public class Main extends Application {
                 () -> navigator.getView().getBody(),
            navigator.getCurrentViewProperty()
         ));
+
+        primaryStage.setTitle("Typing Race");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
