@@ -13,8 +13,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-import java.util.Arrays;
-
 public class SetupTypistsView extends View {
     private SetupTypistsViewModel viewModel;
     private Navigator navigator;
@@ -41,7 +39,6 @@ public class SetupTypistsView extends View {
             TextField nameField = new TextField();
 
             TextField symbolField = new TextField();
-            symbolField.setTextFormatter(new TextFormatter<>(change -> {return change;}));
             symbolField.setPrefColumnCount(2);
             symbolField.setMaxWidth(Region.USE_PREF_SIZE);
             symbolField.setStyle("-fx-font-family: 'Apple Color Emoji';");
@@ -57,7 +54,7 @@ public class SetupTypistsView extends View {
             keyboards.setValue(viewModel.getKeyboards().iterator().next());
 
             CheckBox wristSupport = new CheckBox("Wrist Support (-1 burnout duration)");
-            CheckBox energyDrink = new CheckBox("Energy Drink (+10% accuracy for 15w2 turns, " +
+            CheckBox energyDrink = new CheckBox("Energy Drink (+10% accuracy for 75 turns, " +
                     "-10% accuracy for the rest of the race)");
             CheckBox headphones = new CheckBox("Noise-Cancelling Headphones (+5% accuracy)");
 

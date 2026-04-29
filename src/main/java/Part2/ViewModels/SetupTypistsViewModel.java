@@ -56,7 +56,7 @@ public class SetupTypistsViewModel {
                     colour, modifiedAccuracy, speed);
 
             if (config.caffeine()) {
-                typist.setSpeedBoost(1, 10);
+                typist.setSpeedBoost(1, 50);
             }
 
             if (wristSupport) {
@@ -64,7 +64,7 @@ public class SetupTypistsViewModel {
             }
 
             if (energyDrink) {
-                typist.setAccuracyBoost(0.1, 15);
+                typist.setAccuracyBoost(0.1, 75);
             }
 
             typists[index] = typist;
