@@ -1,6 +1,6 @@
 package Part2;
 
-import Part2.Views.SetupView;
+import Part2.Views.MainMenuView;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.scene.Scene;
@@ -19,9 +19,11 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         Navigator navigator = new Navigator();
-        SetupView setupView = new SetupView(navigator);
-        navigator.navigateTo(setupView);
-        Scene scene = new Scene(setupView.getBody(), 1000, 500);
+        AppState appState = new AppState();
+
+        MainMenuView setupRaceView = new MainMenuView(appState, navigator);
+        navigator.navigateTo(setupRaceView);
+        Scene scene = new Scene(setupRaceView.getBody(), 1000, 500);
         scene.rootProperty().bind(Bindings.createObjectBinding(
                 () -> navigator.getView().getBody(),
            navigator.getCurrentViewProperty()
