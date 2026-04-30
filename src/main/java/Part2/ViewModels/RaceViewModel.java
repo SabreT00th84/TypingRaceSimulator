@@ -1,12 +1,14 @@
 package Part2.ViewModels;
 
+import Part2.Models.RaceStat;
 import Part2.Models.Typist;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class RaceViewModel {
@@ -17,25 +19,38 @@ public class RaceViewModel {
     private static final double BASE_ACCURACY_MULTIPLIER = 0.02;
 
     private final int slideBackAmount;
+    private final List<Typist> typists;
     private final Map<Typist, Text> typistCursors;
+    private final Map<Typist, Double> startingAccuracies;
     private final String passage;
+    private final BooleanProperty raceFinished;
+    private final BooleanProperty showRaceStats;
 
     public RaceViewModel(Typist[] typists, boolean autocorrect, String passage) {
-        this.typistCursors = new LinkedHashMap<>();
         this.slideBackAmount = autocorrect ? (BASE_SLIDE_BACK_AMOUNT / 2) : BASE_SLIDE_BACK_AMOUNT;
+        this.typists = new ArrayList<>(Arrays.asList(typists));
+        this.typistCursors = new HashMap<>();
+        this.startingAccuracies = new HashMap<>();
         this.passage = passage;
+        this.raceFinished = new SimpleBooleanProperty(false);
+        this.showRaceStats = new SimpleBooleanProperty(false);
 
         for (Typist typist : typists) {
             this.typistCursors.put(typist, getTypistCursor(typist));
+            this.startingAccuracies.put(typist, typist.getBaseAccuracy());
         }
     }
 
-    public Typist[] getTypists() {
-        return typistCursors.keySet().toArray(new Typist[0]);
+    public List<Typist> getTypists() {
+        return typists;
     }
 
     public String getPassage() {
         return passage;
+    }
+
+    public double getStartingAccuracy(Typist typist) {
+        return startingAccuracies.get(typist);
     }
 
     public Text[] getPassageAsTextNodes() {
@@ -57,18 +72,29 @@ public class RaceViewModel {
 
     public void updateTypistCursorPosition(int newPosition, Typist typist, TextFlow textFlow) {
         textFlow.getChildren().remove(typistCursors.get(typist));
-        textFlow.getChildren().add(newPosition, typistCursors.get(typist));
+        if (newPosition >= passage.length()) {
+            textFlow.getChildren().add(typistCursors.get(typist));
+        } else {
+            textFlow.getChildren().add(newPosition, typistCursors.get(typist));
+        }
     }
 
-    public boolean raceFinished() {
+    private boolean raceFinished() {
 
         for (Typist typist : getTypists()) {
             if (!typist.isFinished(passage.length())) {
                 return false;
             }
         }
-
         return true;
+    }
+
+    public BooleanProperty getRaceFinishedProperty() {
+        return raceFinished;
+    }
+
+    public BooleanProperty getShowRaceStatsProperty() {
+        return showRaceStats;
     }
 
     public void startRaceGUI() {
@@ -77,7 +103,7 @@ public class RaceViewModel {
             for (Typist typist : getTypists()) {
                 if (!typist.isFinished(passage.length())) {
                     Platform.runLater(() ->
-                        typist.takeTurn(MISTYPE_BASE_CHANCE,
+                        typist.takeTurn(MISTYPE_BASE_CHANCE + typist.getMistypeChanceModifier(),
                                 slideBackAmount,
                                 BURNOUT_DURATION,
                                 BASE_ACCURACY_MULTIPLIER
@@ -90,6 +116,49 @@ public class RaceViewModel {
             try {
                 TimeUnit.MILLISECONDS.sleep(200);
             } catch (Exception ignored) {}
+        }
+
+        Platform.runLater(() -> raceFinished.set(true));
+        postRaceActions();
+        Platform.runLater(() -> showRaceStats.set(true));
+    }
+
+    private void addRaceStat(Typist typist, int position) {
+        int wpm = (int) Math.round(passage.split(" ").length / (typist.getTimeTaken() / 60));
+        double accuracy = (double) (passage.length() - typist.getNumberOfMistypes()) / passage.length();
+        double accuracyChange = typist.getBaseAccuracy() - startingAccuracies.get(typist);
+        int points = (int) Math.round((double) ((typists.size() - position - 1) * wpm) / typist.getNumberOfBurnouts());
+
+        typist.addRaceStat(new RaceStat(
+                position,
+                wpm,
+                accuracy,
+                typist.getNumberOfBurnouts(),
+                accuracyChange,
+                points
+        ));
+    }
+
+    public void awardTypist(Typist typist) {
+        if (typist.getRaceStats().stream().filter(s -> s.position() == 1).count() >= 3) {
+            typist.addAward(Typist.awards.get(0));
+        } else if (typist.getRaceStats().stream().filter(s -> s.numOfBurnouts() == 0).count() >= 5) {
+            typist.addAward(Typist.awards.get(1));
+        }
+    }
+
+    private void increaseWinnerAccuracy(Typist winner) {
+        winner.setAccuracy(winner.getBaseAccuracy() + (winner.getBaseAccuracy() * BASE_ACCURACY_MULTIPLIER * 5));
+    }
+
+    private void postRaceActions() {
+        typists.sort(Comparator.comparingDouble(Typist::getTimeTaken));
+        increaseWinnerAccuracy(typists.getFirst());
+
+        for (int i = 0; i < typists.size(); i++) {
+            addRaceStat(typists.get(i), i + 1);
+            awardTypist(typists.get(i));
+            typists.get(i).reset();
         }
     }
 }

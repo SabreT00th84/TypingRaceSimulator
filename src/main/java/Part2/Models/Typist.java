@@ -2,8 +2,7 @@ package Part2.Models;
 
 import javafx.beans.property.*;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Eesa Adam
@@ -29,11 +28,19 @@ public class Typist {
         keyboardTypes.put("Stenographic (+10% Accuracy, 3 character per turn)", new Double[]{0.10, 3.0});
     }
 
+    public static final List<String> awards = new ArrayList<>();
+    static {
+        awards.add("Speed Demon");
+        awards.add("Iron Fingers");
+    }
+
     private String name;
     private String symbol;
     private String colour; //As a hex code
     private double accuracy;
     private int speed;
+    private final List<RaceStat> raceStats;
+    private final Set<String> awardsReceived;
 
 
     //Race Specific
@@ -48,10 +55,15 @@ public class Typist {
 
     private final DoubleProperty accuracyBoost;
     private int accuracyBoostRemaining;
+    private double accuracyModifer;
 
     private final BooleanProperty justMistyped;
+    private double mistypeChanceModifier;
 
     private double timeTaken; // In s
+    private int numberOfMistypes;
+    private int numberOfBurnouts;
+
 
 
     // Constructor of class Typist
@@ -72,6 +84,8 @@ public class Typist {
         this.colour = colour;
         this.accuracy = typistAccuracy;
         this.speed = speed;
+        this.raceStats = new LinkedList<>();
+        this.awardsReceived = new HashSet<>();
 
 
         //Race Specific
@@ -86,8 +100,10 @@ public class Typist {
 
         this.accuracyBoost = new SimpleDoubleProperty(0);
         this.accuracyBoostRemaining = 0;
+        this.accuracyModifer = 0;
 
         this.justMistyped = new SimpleBooleanProperty(false);
+        this.mistypeChanceModifier = 0;
 
         this.timeTaken = 0;
     }
@@ -120,7 +136,11 @@ public class Typist {
     }
 
     public double getAccuracy() {
-        return Math.min (accuracy + accuracyBoost.get(), 1);
+        return Math.min (accuracy + accuracyBoost.get() + accuracyModifer, 1);
+    }
+
+    public double getBaseAccuracy() {
+        return accuracy;
     }
 
     public void setAccuracy(double newAccuracy) {
@@ -147,6 +167,26 @@ public class Typist {
         }
     }
 
+    public List<RaceStat> getRaceStats() {
+        return raceStats;
+    }
+
+    public RaceStat getLastRaceStat() {
+        return raceStats.getLast();
+    }
+
+    public void addRaceStat(RaceStat raceStat) {
+        raceStats.add(raceStat);
+    }
+
+    public Set<String> getAwardsReceived() {
+        return awardsReceived;
+    }
+
+    public void addAward(String award) {
+        awardsReceived.add(award);
+    }
+
     public int getProgress() {
         return progress.get();
     }
@@ -166,7 +206,7 @@ public class Typist {
 
         if (isBurntOut()) {
             recoverFromBurnout();
-        } else if (Math.random() < (1 - getAccuracy()) * mistypeBaseChance) {
+        } else if (Math.random() < (1 - getAccuracy()) * (mistypeBaseChance + mistypeChanceModifier)) {
             slideBack(slideBackAmount);
         } else if (Math.random() < 0.05 * getAccuracy() * getAccuracy()) {
             burnOut(burnoutDuration);
@@ -191,7 +231,7 @@ public class Typist {
             accuracyBoostRemaining = Integer.MAX_VALUE;
         }
 
-        timeTaken += 0.2;
+        timeTaken += 0.25;
     }
 
     private void typeCharacter() {
@@ -201,6 +241,7 @@ public class Typist {
     private void slideBack(int amount) {
 
         justMistyped.set(true);
+        numberOfMistypes++;
 
         if ((getProgress() - amount) < 0) {
             progress.set(0);
@@ -220,6 +261,7 @@ public class Typist {
     private void burnOut(int turns) {
         burntOut.set(true);
         burnoutRemaining.set(turns + burnoutDurationModifier);
+        numberOfBurnouts++;
     }
 
     private void recoverFromBurnout() {
@@ -270,6 +312,10 @@ public class Typist {
         return accuracyBoostRemaining;
     }
 
+    public void setAccuracyModifier(double accuracyModifier) {
+        this.accuracyModifer = accuracyModifier;
+    }
+
     public boolean hasJustMistyped() {
         return justMistyped.get();
     }
@@ -278,8 +324,24 @@ public class Typist {
         return justMistyped;
     }
 
+    public void setMistypeChanceModifier(double mistypeChanceModifier) {
+        this.mistypeChanceModifier = mistypeChanceModifier;
+    }
+
+    public double getMistypeChanceModifier() {
+        return mistypeChanceModifier;
+    }
+
     public double getTimeTaken() {
         return timeTaken;
+    }
+
+    public int getNumberOfMistypes() {
+        return numberOfMistypes;
+    }
+
+    public int getNumberOfBurnouts() {
+        return numberOfBurnouts;
     }
 
     public void reset() {

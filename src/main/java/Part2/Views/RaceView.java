@@ -1,9 +1,12 @@
 package Part2.Views;
 
+import Part2.Models.RaceStat;
 import Part2.Models.Typist;
 import Part2.View;
 import Part2.ViewModels.RaceViewModel;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -13,6 +16,8 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextFlow;
 
 public class RaceView extends View {
@@ -81,14 +86,73 @@ public class RaceView extends View {
             typistLane.getChildren().addAll(new Label(typist.getName()), progress, info, burnout, mistyped);
             progressSection.getChildren().add(typistLane);
 
-            typist.getProgressProperty().addListener(
-                    (observable, oldValue, newValue) ->
-                        viewModel.updateTypistCursorPosition(newValue.intValue() + 1, typist, passage)
-                    );
+            ChangeListener<Number> cursorListener = (observable, oldValue, newValue) ->
+                Platform.runLater(() ->
+                        viewModel.updateTypistCursorPosition(
+                                newValue.intValue(),
+                                typist,
+                                passage
+                        )
+                );
+            typist.getProgressProperty().addListener(cursorListener);
+
+            viewModel.getRaceFinishedProperty().addListener(
+                    (observable, oldValue, newValue) -> {
+                        progressBar.progressProperty().unbind();
+                        symbol.textProperty().unbind();
+                        info.textProperty().unbind();
+                        burnout.textProperty().unbind();
+                        mistyped.textProperty().unbind();
+                        typist.getProgressProperty().removeListener(cursorListener);
+                    });
         }
 
         vbox.getChildren().addAll(progressSection, passage);
 
+        VBox stats = new VBox(5);
+        viewModel.getShowRaceStatsProperty().addListener(((
+                (observable, oldValue, newValue) -> {
+            if (newValue) {
+                for (Typist typist : viewModel.getTypists()) {
+                    RaceStat stat = typist.getLastRaceStat();
+
+                    Label heading = new Label(typist.getName() + " (" + stat.position() + (
+                            (stat.position() == 1) ? "st" :
+                                    (stat.position() == 2) ? "nd" :
+                                    (stat.position() == 3) ? "rd" : "th")
+                            + " place)"
+                    );
+                    heading.setFont(Font.font("sans-serif", FontWeight.BOLD, 20));
+
+                    Label wpm = new Label("WPM: " + stat.wpm());
+                    Label accuracyPerc = new Label("Accuracy Percentage (Proportion of non-mistyped characters): "
+                           + String.format("%.2f", stat.raceAccuracy() * 100) + "%"
+                    );
+                    Label numOfBurnout = new Label("Number of burnouts: " + stat.numOfBurnouts());
+                    Label prevAccuracy = new Label("Previous Accuracy: " +
+                            String.format("%.2f", viewModel.getStartingAccuracy(typist)));
+                    Label newAccuracy = new Label("New Accuracy: " +
+                            String.format("%.2f", typist.getBaseAccuracy()));
+                    Label accuracyChange = new Label("Accuracy Change: " +
+                            (stat.typistAccuracyChange() >= 0 ? "+" : "") +
+                            String.format("%.2f", stat.typistAccuracyChange() * 100) + "%"
+                    );
+
+                    stats.getChildren().addAll(
+                            heading,
+                            wpm,
+                            accuracyPerc,
+                            numOfBurnout,
+                            prevAccuracy,
+                            newAccuracy,
+                            accuracyChange
+                    );
+                }
+            }
+        })));
+        stats.visibleProperty().bind(viewModel.getRaceFinishedProperty());
+
+        vbox.getChildren().add(stats);
         ScrollPane scrollPane = new ScrollPane(vbox);
         scrollPane.setFitToWidth(true);
 
