@@ -1,9 +1,9 @@
 package Part2.Views;
 
-import Part2.Models.RaceConfig;
+import Part2.AppState;
 import Part2.Navigator;
 import Part2.View;
-import Part2.ViewModels.SetupTypistsViewModel;
+import Part2.ViewModels.AddTypistsViewModel;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
@@ -13,18 +13,20 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-public class SetupTypistsView extends View {
-    private SetupTypistsViewModel viewModel;
+public class AddTypistsView extends View {
+    private AppState appState;
     private Navigator navigator;
+    private AddTypistsViewModel viewModel;
 
-    public SetupTypistsView(RaceConfig config, Navigator navigator) {
-        super(config, navigator);
+    public AddTypistsView(AppState appState, Navigator navigator, Integer numOfTypists) {
+        super(appState, navigator, numOfTypists);
     }
 
     @Override
     protected void init(Object... o) {
-        viewModel = new SetupTypistsViewModel((RaceConfig) o[0]);
+        appState = (AppState) o[0];
         navigator = (Navigator) o[1];
+        viewModel = new AddTypistsViewModel(appState, (Integer) o[2]);
     }
 
     @Override
@@ -32,7 +34,7 @@ public class SetupTypistsView extends View {
         VBox vbox = new VBox(5);
         vbox.setPadding(new Insets(10));
 
-        for (int i = 0; i < viewModel.getConfig().numOfTypists(); i++) {
+        for (int i = 0; i < viewModel.getNumOfTypists(); i++) {
             Label heading = new Label("Typist" + (i + 1));
             heading.setFont(Font.font("sans-serif", FontWeight.BOLD, 20));
 
@@ -41,7 +43,6 @@ public class SetupTypistsView extends View {
             TextField symbolField = new TextField();
             symbolField.setPrefColumnCount(2);
             symbolField.setMaxWidth(Region.USE_PREF_SIZE);
-            symbolField.setStyle("-fx-font-family: 'Apple Color Emoji';");
 
             ColorPicker colourPicker = new ColorPicker();
 
@@ -56,10 +57,9 @@ public class SetupTypistsView extends View {
             CheckBox wristSupport = new CheckBox("Wrist Support (-1 burnout duration)");
             CheckBox energyDrink = new CheckBox("Energy Drink (+10% accuracy for 75 turns, " +
                     "-10% accuracy for the rest of the race)");
-            CheckBox headphones = new CheckBox("Noise-Cancelling Headphones (+5% accuracy)");
+            CheckBox headphones = new CheckBox("Noise-Cancelling Headphones (-5% Mistype Chance)");
 
             Button addButton = new Button("Add");
-            int index = i;
 
             Label errorMessage = new Label();
             errorMessage.setStyle("-fx-text-fill: red");
@@ -71,7 +71,7 @@ public class SetupTypistsView extends View {
             buttonGroup.getChildren().add(success);
 
             addButton.setOnAction(e -> {
-                String result = viewModel.addTypist(index,
+                String result = viewModel.addTypist(
                         nameField.getText(),
                         symbolField.getText(),
                         viewModel.colourToHex(
@@ -79,9 +79,8 @@ public class SetupTypistsView extends View {
                                 colourPicker.getValue().getGreen(),
                                 colourPicker.getValue().getBlue()
                                 ),
-                        viewModel.getStyleAccuracy(styles.getValue()) +
-                                viewModel.getKeyboardAccuracy(keyboards.getValue()),
-                        viewModel.getKeyboardSpeed(keyboards.getValue()),
+                        styles.getValue(),
+                        keyboards.getValue(),
                         wristSupport.isSelected(),
                         energyDrink.isSelected(),
                         headphones.isSelected()
@@ -93,6 +92,7 @@ public class SetupTypistsView extends View {
                 } else {
                     errorMessage.setVisible(false);
                     success.setVisible(true);
+                    addButton.setVisible(false);
                 }
             });
 
@@ -120,17 +120,13 @@ public class SetupTypistsView extends View {
         Label error = new Label();
         error.setVisible(false);
 
-        Button startButton = new Button("Start Race");
-        startButton.setOnAction(e -> {
+        Button backButton = new Button("Back");
+        backButton.setOnAction(e -> {
             String validationResult = viewModel.validateAllTypists();
 
             if (validationResult == null) {
                 error.setVisible(false);
-                navigator.navigateTo(new RaceView(
-                        viewModel.getTypists(),
-                        viewModel.getConfig().autocorrect(),
-                        viewModel.getConfig().passage()
-                ));
+                navigator.navigateTo(new MainMenuView(appState, navigator));
             } else {
                 error.setText(validationResult);
                 error.setVisible(true);
@@ -143,7 +139,7 @@ public class SetupTypistsView extends View {
 
         vbox.getChildren().addAll(
                 error,
-                startButton
+                backButton
         );
 
         return new ScrollPane(vbox);

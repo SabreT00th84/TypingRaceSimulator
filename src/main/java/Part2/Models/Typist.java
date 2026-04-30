@@ -30,18 +30,22 @@ public class Typist {
 
     public static final List<String> awards = new ArrayList<>();
     static {
-        awards.add("Speed Demon");
-        awards.add("Iron Fingers");
+        awards.add("Speed Demon (Awarded for 3 wins)");
+        awards.add("Iron Fingers (Awarded for 5 races with no burnouts");
     }
 
     private String name;
     private String symbol;
     private String colour; //As a hex code
-    private double accuracy;
+    private final DoubleProperty accuracy;
     private int speed;
     private final List<RaceStat> raceStats;
     private final Set<String> awardsReceived;
-
+    private String typingStyle;
+    private String keyboardType;
+    private boolean wristSupport;
+    private boolean energyDrink;
+    private boolean headphones;
 
     //Race Specific
     private final IntegerProperty progress;
@@ -75,17 +79,20 @@ public class Typist {
      * @param typistName     the name of the typist (e.g. "TURBOFINGERS")
      * @param typistSymbol   a single Unicode character representing this typist (e.g. '①', '②', '③')
      * @param colour         the typist's colour, as a hex code
-     * @param typistAccuracy the typist's accuracy rating, between 0.0 and 1.0
-     * @param speed          the typist's speed modifier, between 1 and 10
      */
-    public Typist(String typistName, String typistSymbol, String colour, double typistAccuracy, int speed) {
+    public Typist(String typistName, String typistSymbol, String colour) {
         this.name = typistName;
         this.symbol = typistSymbol;
         this.colour = colour;
-        this.accuracy = typistAccuracy;
-        this.speed = speed;
+        this.accuracy = new SimpleDoubleProperty(0);
+        this.speed = 0;
         this.raceStats = new LinkedList<>();
         this.awardsReceived = new HashSet<>();
+        this.typingStyle = "Touch Typist (90% Accuracy, Higher chance of burnout)";
+        this.keyboardType = "Touchscreen (-5% Accuracy, 1 character per turn)";
+        this.wristSupport = false;
+        this.energyDrink = false;
+        this.headphones = false;
 
 
         //Race Specific
@@ -136,20 +143,24 @@ public class Typist {
     }
 
     public double getAccuracy() {
-        return Math.min (accuracy + accuracyBoost.get() + accuracyModifer, 1);
+        return Math.min (accuracy.get() + accuracyBoost.get() + accuracyModifer, 1);
     }
 
     public double getBaseAccuracy() {
+        return accuracy.get();
+    }
+
+    public DoubleProperty getBaseAccuracyProperty() {
         return accuracy;
     }
 
     public void setAccuracy(double newAccuracy) {
         if (newAccuracy < 0) {
-            accuracy = 0;
+            accuracy.set(0);
         } else if (newAccuracy > 1) {
-            accuracy = 1;
+            accuracy.set(1);
         } else {
-            accuracy = newAccuracy;
+            accuracy.set(newAccuracy);
         }
     }
 
@@ -157,7 +168,7 @@ public class Typist {
         return speed + speedBoost.get();
     }
 
-    public void setSpeed(int newSpeed) {
+    private void setSpeed(int newSpeed) {
         if (newSpeed < 1) {
             speed = 1;
         } else if (newSpeed > 10) {
@@ -187,6 +198,51 @@ public class Typist {
         awardsReceived.add(award);
     }
 
+    public String getTypingStyle() {
+        return typingStyle;
+    }
+
+    public void setTypingStyle(String typingStyle) {
+        this.typingStyle = typingStyle;
+        setAccuracy(getBaseAccuracy() + typingStyles.get(typingStyle));
+    }
+
+    public String getKeyboardType() {
+        return keyboardType;
+    }
+
+    public void setKeyboardType(String keyboardType) {
+        this.keyboardType = keyboardType;
+        setAccuracy(getBaseAccuracy() + keyboardTypes.get(keyboardType)[0]);
+        setSpeed(keyboardTypes.get(keyboardType)[1].intValue());
+    }
+
+    public boolean hasWristSupport() {
+        return wristSupport;
+    }
+
+    public void setWristSupport(boolean wristSupport) {
+        this.wristSupport = wristSupport;
+        burnoutDurationModifier = -1;
+    }
+
+    public boolean hasEnergyDrink() {
+        return energyDrink;
+    }
+
+    public void setEnergyDrink(boolean energyDrink) {
+        this.energyDrink = energyDrink;
+    }
+
+    public boolean hasHeadphones() {
+        return headphones;
+    }
+
+    public void setHeadphones(boolean headphones) {
+        this.headphones = headphones;
+        setMistypeChanceModifier(-0.05);
+    }
+
     public int getProgress() {
         return progress.get();
     }
@@ -210,7 +266,7 @@ public class Typist {
             slideBack(slideBackAmount);
         } else if (Math.random() < 0.05 * getAccuracy() * getAccuracy()) {
             burnOut(burnoutDuration);
-            setAccuracy(accuracy - (accuracy * baseAccuracyMultiplier));
+            setAccuracy(accuracy.get() - (accuracy.get() * baseAccuracyMultiplier));
         } else {
             typeCharacter();
         }
@@ -282,10 +338,6 @@ public class Typist {
         return burnoutRemaining;
     }
 
-    public void setBurnoutDurationModifier(int burnoutDurationModifier) {
-        this.burnoutDurationModifier = burnoutDurationModifier;
-    }
-
     public IntegerProperty getSpeedBoostProperty() {
         return speedBoost;
     }
@@ -303,7 +355,7 @@ public class Typist {
         return accuracyBoost;
     }
 
-    public void setAccuracyBoost(double accuracyBoost, int accuracyBoostDuration) {
+    private void setAccuracyBoost(double accuracyBoost, int accuracyBoostDuration) {
         this.accuracyBoost.set(accuracyBoost);
         accuracyBoostRemaining = accuracyBoostDuration;
     }
@@ -348,13 +400,16 @@ public class Typist {
         progress.set(0);
         burntOut.set(false);
         burnoutRemaining.set(0);
-        burnoutDurationModifier = 0;
         speedBoost.set(0);
         speedBoostRemaining = 0;
         accuracyBoost.set(0);
         accuracyBoostRemaining = 0;
         justMistyped.set(false);
         timeTaken = 0;
+    }
+
+    public void prepareForRace() {
+        if (energyDrink) setAccuracyBoost(0.1, 75);
     }
 
     public boolean isFinished(int passageLength) {
