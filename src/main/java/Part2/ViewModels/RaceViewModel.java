@@ -1,5 +1,6 @@
 package Part2.ViewModels;
 
+import Part2.AppState;
 import Part2.Models.RaceStat;
 import Part2.Models.Typist;
 import javafx.application.Platform;
@@ -18,31 +19,31 @@ public class RaceViewModel {
     private static final int    BURNOUT_DURATION     = 3;
     private static final double BASE_ACCURACY_MULTIPLIER = 0.02;
 
+    private final AppState appState;
     private final int slideBackAmount;
-    private final List<Typist> typists;
     private final Map<Typist, Text> typistCursors;
     private final Map<Typist, Double> startingAccuracies;
     private final String passage;
     private final BooleanProperty raceFinished;
     private final BooleanProperty showRaceStats;
 
-    public RaceViewModel(Typist[] typists, boolean autocorrect, String passage) {
+    public RaceViewModel(AppState appState, boolean autocorrect, String passage) {
+        this.appState = appState;
         this.slideBackAmount = autocorrect ? (BASE_SLIDE_BACK_AMOUNT / 2) : BASE_SLIDE_BACK_AMOUNT;
-        this.typists = new ArrayList<>(Arrays.asList(typists));
         this.typistCursors = new HashMap<>();
         this.startingAccuracies = new HashMap<>();
         this.passage = passage;
         this.raceFinished = new SimpleBooleanProperty(false);
         this.showRaceStats = new SimpleBooleanProperty(false);
 
-        for (Typist typist : typists) {
+        for (Typist typist : appState.getTypists()) {
             this.typistCursors.put(typist, getTypistCursor(typist));
             this.startingAccuracies.put(typist, typist.getBaseAccuracy());
         }
     }
 
     public List<Typist> getTypists() {
-        return typists;
+        return appState.getTypists();
     }
 
     public String getPassage() {
@@ -99,6 +100,8 @@ public class RaceViewModel {
 
     public void startRaceGUI() {
 
+        for (Typist typist : getTypists()) typist.prepareForRace();
+
         while (!raceFinished()) {
             for (Typist typist : getTypists()) {
                 if (!typist.isFinished(passage.length())) {
@@ -127,7 +130,8 @@ public class RaceViewModel {
         int wpm = (int) Math.round(passage.split(" ").length / (typist.getTimeTaken() / 60));
         double accuracy = (double) (passage.length() - typist.getNumberOfMistypes()) / passage.length();
         double accuracyChange = typist.getBaseAccuracy() - startingAccuracies.get(typist);
-        int points = (int) Math.round((double) ((typists.size() - position - 1) * wpm) / typist.getNumberOfBurnouts());
+        int points = (int) Math.round((double) ((appState.getTypists().size() - position - 1) * wpm)
+                / typist.getNumberOfBurnouts());
 
         typist.addRaceStat(new RaceStat(
                 position,
@@ -148,17 +152,17 @@ public class RaceViewModel {
     }
 
     private void increaseWinnerAccuracy(Typist winner) {
-        winner.setAccuracy(winner.getBaseAccuracy() + (winner.getBaseAccuracy() * BASE_ACCURACY_MULTIPLIER * 5));
+        winner.setAccuracy(winner.getBaseAccuracy() + (winner.getBaseAccuracy() * BASE_ACCURACY_MULTIPLIER * 10));
     }
 
     private void postRaceActions() {
-        typists.sort(Comparator.comparingDouble(Typist::getTimeTaken));
-        increaseWinnerAccuracy(typists.getFirst());
+        appState.getTypists().sort(Comparator.comparingDouble(Typist::getTimeTaken));
+        increaseWinnerAccuracy(appState.getTypists().getFirst());
 
-        for (int i = 0; i < typists.size(); i++) {
-            addRaceStat(typists.get(i), i + 1);
-            awardTypist(typists.get(i));
-            typists.get(i).reset();
+        for (int i = 0; i < appState.getTypists().size(); i++) {
+            addRaceStat(appState.getTypists().get(i), i + 1);
+            awardTypist(appState.getTypists().get(i));
+            appState.getTypists().get(i).reset();
         }
     }
 }

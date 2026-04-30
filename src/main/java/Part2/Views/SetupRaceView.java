@@ -1,30 +1,29 @@
 package Part2.Views;
 
-import Part2.Models.RaceConfig;
+import Part2.AppState;
 import Part2.Navigator;
 import Part2.View;
-import Part2.ViewModels.SetupViewModel;
+import Part2.ViewModels.SetupRaceViewModel;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 
-public class SetupView extends View {
-    private SetupViewModel viewModel;
+public class SetupRaceView extends View {
+    private AppState appState;
     private Navigator navigator;
+    private SetupRaceViewModel viewModel;
 
-    public SetupView(Navigator navigator) {
-        super(navigator);
+    public SetupRaceView(AppState appState, Navigator navigator) {
+        super(appState, navigator);
     }
 
-    /**
-     *
-     */
     @Override
     protected void init(Object... o) {
-        viewModel = new SetupViewModel();
-        navigator = (Navigator) o[0];
+        this.appState = (AppState) o[0];
+        this.navigator = (Navigator) o[1];
+        this.viewModel = new SetupRaceViewModel((AppState) o[0]);
     }
 
     @Override
@@ -40,14 +39,16 @@ public class SetupView extends View {
                 () -> !viewModel.passagesContainsKey(viewModel.getSelected()),
                 viewModel.getSelectedProperty()
         ));
-        viewModel.getSelectedProperty().addListener(((observable, oldValue, newValue) -> {
-            String fromMap = viewModel.getPassage(newValue);
-            if (fromMap != null) {
-                preview.setText(fromMap);
-            } else {
-                preview.textProperty().bindBidirectional(viewModel.getTextProperty());
-            }
-        }));
+        viewModel.getSelectedProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    String fromMap = viewModel.getPassage(newValue);
+                    if (fromMap != null) {
+                        preview.setText(fromMap);
+                    } else {
+                        preview.textProperty().bindBidirectional(viewModel.getTextProperty());
+                    }
+                }
+        );
 
         Button addPassageButton = new Button("Add");
         addPassageButton.visibleProperty().bind(Bindings.createBooleanBinding(
@@ -61,25 +62,25 @@ public class SetupView extends View {
             }
         });
 
-        Spinner<Integer> numOfTypists = new Spinner<>(2, 6, 2);
-
         CheckBox autocorrect = new CheckBox("Autocorrect (Halves slideback amount)");
         CheckBox caffeine = new CheckBox("Caffeine (Increased speed for first 50 turns" +
                 " of the race with increased burnout risk)");
         CheckBox night = new CheckBox("Night Shift (Reduced Accuracy)");
 
-        Button submitButton = new Button("Next");
+        Button submitButton = new Button("Start");
         submitButton.visibleProperty().bind(Bindings.createBooleanBinding(
                 () -> viewModel.passagesContainsKey(viewModel.getSelected()),
                 viewModel.getSelectedProperty(), viewModel.getPassagesProperty()
         ));
-        submitButton.setOnAction(e -> navigator.navigateTo(new SetupTypistsView(new RaceConfig(
-                preview.getText(),
-                numOfTypists.getValue(),
-                autocorrect.isSelected(),
-                caffeine.isSelected(),
-                night.isSelected()
-        ), navigator)));
+        submitButton.setOnAction(e -> {
+            viewModel.applyModifiers(caffeine.isSelected(), night.isSelected());
+            navigator.navigateTo(new RaceView(
+                    appState,
+                    navigator,
+                    autocorrect.isSelected(),
+                    viewModel.getPassage(viewModel.getSelected())
+            ));
+        });
 
         VBox vBox = new VBox(5,
                 new Label("Select Passage"),
@@ -87,9 +88,7 @@ public class SetupView extends View {
                 new Label("Preview"),
                 preview,
                 addPassageButton,
-                new Label("Number of Typists"),
-                numOfTypists,
-                new Label("Difficulty Modifiers (Applies to everyone)"),
+                new Label("Difficulty Modifiers (Apply to everyone)"),
                 autocorrect,
                 caffeine,
                 night,

@@ -1,7 +1,9 @@
 package Part2.Views;
 
+import Part2.AppState;
 import Part2.Models.RaceStat;
 import Part2.Models.Typist;
+import Part2.Navigator;
 import Part2.View;
 import Part2.ViewModels.RaceViewModel;
 import javafx.application.Platform;
@@ -10,6 +12,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
@@ -22,15 +25,19 @@ import javafx.scene.text.TextFlow;
 
 public class RaceView extends View {
 
+    private AppState appState;
+    private Navigator navigator;
     private RaceViewModel viewModel;
 
-    public RaceView(Typist[] typists, boolean autocorrect, String passage) {
-        super(typists, autocorrect, passage);
+    public RaceView(AppState appState, Navigator navigator, boolean autocorrect, String passage) {
+        super(appState, navigator, autocorrect, passage);
     }
 
     @Override
     protected void init(Object... o) {
-        viewModel = new RaceViewModel((Typist[]) o[0], (boolean) o[1], (String) o[2]);
+        this.appState = (AppState) o[0];
+        this.navigator = (Navigator) o[1];
+        this.viewModel = new RaceViewModel((AppState) o[0], (boolean) o[2], (String) o[3]);
     }
 
     @Override
@@ -70,7 +77,7 @@ public class RaceView extends View {
             info.textProperty().bind(Bindings.createStringBinding(
                     () -> "      (Accuracy: " + String.format("%.2f", typist.getAccuracy()) +
                             ", Speed: " + typist.getSpeed() + ") ",
-                    typist.getSpeedBoostProperty(), typist.getAccuracyBoostProperty()
+                    typist.getSpeedBoostProperty(), typist.getAccuracyBoostProperty(), typist.getBaseAccuracyProperty()
             ));
 
             Label burnout = new Label();
@@ -153,6 +160,12 @@ public class RaceView extends View {
         stats.visibleProperty().bind(viewModel.getRaceFinishedProperty());
 
         vbox.getChildren().add(stats);
+
+        Button back = new Button("Main Menu");
+        back.setOnAction(e -> navigator.navigateTo(new MainMenuView(appState, navigator)));
+
+        vbox.getChildren().add(back);
+
         ScrollPane scrollPane = new ScrollPane(vbox);
         scrollPane.setFitToWidth(true);
 

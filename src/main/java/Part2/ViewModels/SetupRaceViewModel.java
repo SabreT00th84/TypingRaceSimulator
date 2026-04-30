@@ -1,5 +1,7 @@
 package Part2.ViewModels;
 
+import Part2.AppState;
+import Part2.Models.Typist;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -8,7 +10,9 @@ import javafx.collections.ObservableMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
-public class SetupViewModel {
+public class SetupRaceViewModel {
+    private final AppState appState;
+
     private final ObservableMap<String, String> passageStrings = FXCollections.observableMap(new LinkedHashMap<>());
     {
         passageStrings.put("Short", "I must not fear. Fear is the mind-killer. Fear is the little-death " +
@@ -36,6 +40,10 @@ public class SetupViewModel {
 
     private final StringProperty selected = new SimpleStringProperty("Short");
     private final StringProperty text = new SimpleStringProperty("");
+
+    public SetupRaceViewModel(AppState appState) {
+        this.appState = appState;
+    }
 
     public ObservableMap<String, String> getPassagesProperty() {
         return passageStrings;
@@ -72,5 +80,12 @@ public class SetupViewModel {
 
     public StringProperty getTextProperty() {
         return text;
+    }
+
+    public void applyModifiers(boolean caffeine, boolean night) {
+        for (Typist typist : appState.getTypists()) {
+            if (caffeine) typist.setSpeedBoost(1, 50);
+            if (night) typist.setAccuracyModifier(-0.10);
+        }
     }
 }
