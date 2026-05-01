@@ -146,7 +146,7 @@ public class RaceViewModel {
     }
 
     private void payCoins(Typist typist, int position) {
-        int coins = 10 * (appState.getTypists().size() - position + 1);
+        int coins = 20 * (appState.getTypists().size() - position + 1);
 
         if (typist.getLastRaceStat().wpm() >= 200) {
             coins += 100;

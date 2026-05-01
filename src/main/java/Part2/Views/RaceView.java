@@ -145,6 +145,7 @@ public class RaceView extends View {
                             String.format("%.2f", stat.typistAccuracyChange() * 100) + "%"
                     );
                     Label points = new Label("Points Earned: " + stat.pointsEarned());
+                    Label coinsBalance = new Label("New Coins Balance: " + typist.getCoins());
 
                     stats.getChildren().addAll(
                             heading,
@@ -154,6 +155,7 @@ public class RaceView extends View {
                             prevAccuracy,
                             newAccuracy,
                             accuracyChange,
+                            coinsBalance,
                             points
                     );
                 }

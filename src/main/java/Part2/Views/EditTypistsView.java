@@ -36,7 +36,7 @@ public class EditTypistsView extends View {
         vbox.setPadding(new Insets(10));
 
         for (Typist typist : appState.getTypists()) {
-            Label heading = new Label(typist.getName());
+            Label heading = new Label(typist.getName()  + " (" + typist.getCoins() + " coins)");
             heading.setFont(Font.font("sans-serif", FontWeight.BOLD, 20));
 
             Button remove = new Button("Remove");
