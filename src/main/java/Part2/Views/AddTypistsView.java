@@ -59,6 +59,8 @@ public class AddTypistsView extends View {
                     "-10% accuracy for the rest of the race)");
             CheckBox headphones = new CheckBox("Noise-Cancelling Headphones (-5% Mistype Chance)");
 
+            CheckBox sponsored = new CheckBox("KeyCorp: +50 coins if you finish without a single burnout");
+
             Button addButton = new Button("Add");
 
             Label errorMessage = new Label();
@@ -83,7 +85,8 @@ public class AddTypistsView extends View {
                         keyboards.getValue(),
                         wristSupport.isSelected(),
                         energyDrink.isSelected(),
-                        headphones.isSelected()
+                        headphones.isSelected(),
+                        sponsored.isSelected()
                         );
 
                 if (result != null) {
@@ -112,6 +115,8 @@ public class AddTypistsView extends View {
                     wristSupport,
                     energyDrink,
                     headphones,
+                    new Label("Sponsorships"),
+                    sponsored,
                     errorMessage,
                     buttonGroup
             );

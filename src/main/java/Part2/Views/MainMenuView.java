@@ -46,9 +46,19 @@ public class MainMenuView extends View {
 
         Button viewStats = new Button("View Typist Stats");
         viewStats.visibleProperty().bind(appState.typistsProperty().sizeProperty().greaterThan(0));
+        viewStats.setOnAction(e -> navigator.navigateTo(new StatsView(appState, navigator)));
+
+        Button compare = new Button("Compare Typists");
+        compare.visibleProperty().bind(appState.typistsProperty().sizeProperty().greaterThanOrEqualTo(2));
+        compare.setOnAction(e -> navigator.navigateTo(new CompareView(appState, navigator)));
 
         Button viewLeaderboard = new Button("View Leaderboard");
         viewLeaderboard.visibleProperty().bind(appState.typistsProperty().sizeProperty().greaterThan(0));
+        viewLeaderboard.setOnAction(e -> navigator.navigateTo(new LeaderboardView(appState, navigator)));
+
+        Button viewFinLeaderboard = new Button("View Financial Leaderboard");
+        viewLeaderboard.visibleProperty().bind(appState.typistsProperty().sizeProperty().greaterThan(0));
+        viewLeaderboard.setOnAction(e -> navigator.navigateTo(new FinLeaderboardView(appState, navigator)));
 
         vbox.getChildren().addAll(
                 errorMessage,
@@ -56,7 +66,9 @@ public class MainMenuView extends View {
                 editTypists,
                 startRace,
                 viewStats,
-                viewLeaderboard
+                compare,
+                viewLeaderboard,
+                viewFinLeaderboard
         );
 
         return vbox;

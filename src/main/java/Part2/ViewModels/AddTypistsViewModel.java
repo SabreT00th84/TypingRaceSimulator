@@ -29,7 +29,7 @@ public class AddTypistsViewModel {
 
     public String addTypist(String name, String symbol, String colour,
                             String style, String keyboard, boolean wristSupport,
-                            boolean energyDrink, boolean headphones
+                            boolean energyDrink, boolean headphones, boolean sponsored
     )
     {
         if (!validateTypist(name, symbol)) {
@@ -44,11 +44,19 @@ public class AddTypistsViewModel {
             );
 
             typist.setTypingStyle(style);
-            typist.setKeyboardType(keyboard);
+
+            boolean keyboardPurchased = typist.spendCoins(Typist.keyboardTypes.get(keyboard)[2].intValue());
+
+            if (keyboardPurchased) {
+                typist.setKeyboardType(keyboard);
+            } else {
+                return "Not enough coins to purchase this keyboard.";
+            }
 
             typist.setWristSupport(wristSupport);
             typist.setEnergyDrink(energyDrink);
             typist.setHeadphones(headphones);
+            typist.setSponsored(sponsored);
 
             appState.addTypist(typist);
 

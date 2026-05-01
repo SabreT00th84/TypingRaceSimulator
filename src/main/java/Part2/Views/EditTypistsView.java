@@ -83,8 +83,12 @@ public class EditTypistsView extends View {
             keyboards.getItems().addAll(viewModel.getKeyboards());
             keyboards.setValue(typist.getKeyboardType());
             keyboards.valueProperty().addListener(
-                    (observable, oldValue, newValue) ->
-                            typist.setKeyboardType(newValue)
+                    (observable, oldValue, newValue) -> {
+                        boolean keyboardPurchased = typist.spendCoins(Typist.keyboardTypes.get(newValue)[2].intValue());
+                        if (keyboardPurchased) {
+                            typist.setKeyboardType(newValue);
+                        }
+                    }
             );
 
             CheckBox wristSupport = new CheckBox("Wrist Support (-1 burnout duration)");
@@ -109,6 +113,9 @@ public class EditTypistsView extends View {
                             typist.setHeadphones(newValue)
             );
 
+            CheckBox sponsored = new CheckBox("KeyCorp: +50 coins if you finish without a single burnout");
+            sponsored.selectedProperty().bindBidirectional(typist.getSponsoredProperty());
+
             vbox.getChildren().addAll(
                     heading,
                     new Label("Name"),
@@ -124,7 +131,9 @@ public class EditTypistsView extends View {
                     new Label("Accessories"),
                     wristSupport,
                     energyDrink,
-                    headphones
+                    headphones,
+                    new Label("Sponsorships"),
+                    sponsored
             );
         }
 

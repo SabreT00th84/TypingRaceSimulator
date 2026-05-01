@@ -22,10 +22,10 @@ public class Typist {
     public static final Map<String, Double[]> keyboardTypes = new LinkedHashMap<>();
 
     static {
-        keyboardTypes.put("Touchscreen (-5% Accuracy, 1 character per turn)", new Double[]{-0.10, 1.0});
-        keyboardTypes.put("Membrane (+0% Accuracy, 1 character per turn)", new Double[]{0.00, 1.0});
-        keyboardTypes.put("Mechanical (+5% Accuracy, 2 character per turn)", new Double[]{0.05, 2.0});
-        keyboardTypes.put("Stenographic (+10% Accuracy, 3 character per turn)", new Double[]{0.10, 3.0});
+        keyboardTypes.put("0 Coins: Touchscreen (-5% Accuracy, 1 character per turn)", new Double[]{-0.10, 1.0, 0.0});
+        keyboardTypes.put("75 Coins: Membrane (+0% Accuracy, 1 character per turn)", new Double[]{0.00, 1.0, 75.0});
+        keyboardTypes.put("150 Coins: Mechanical (+5% Accuracy, 2 character per turn)", new Double[]{0.05, 2.0, 150.0});
+        keyboardTypes.put("400 Coins: Stenographic (+10% Accuracy, 3 character per turn)", new Double[]{0.10, 3.0, 400.0});
     }
 
     public static final List<String> awards = new ArrayList<>();
@@ -39,6 +39,7 @@ public class Typist {
     private String colour; //As a hex code
     private final DoubleProperty accuracy;
     private int speed;
+    private int coins;
     private final List<RaceStat> raceStats;
     private final Set<String> awardsReceived;
     private String typingStyle;
@@ -46,6 +47,7 @@ public class Typist {
     private boolean wristSupport;
     private boolean energyDrink;
     private boolean headphones;
+    private final BooleanProperty sponsored;
 
     //Race Specific
     private final IntegerProperty progress;
@@ -86,13 +88,15 @@ public class Typist {
         this.colour = colour;
         this.accuracy = new SimpleDoubleProperty(0);
         this.speed = 0;
+        this.coins = 0;
         this.raceStats = new LinkedList<>();
         this.awardsReceived = new HashSet<>();
-        this.typingStyle = "Touch Typist (90% Accuracy, Higher chance of burnout)";
-        this.keyboardType = "Touchscreen (-5% Accuracy, 1 character per turn)";
+        this.typingStyle = typingStyles.keySet().iterator().next();
+        this.keyboardType = keyboardTypes.keySet().iterator().next();
         this.wristSupport = false;
         this.energyDrink = false;
         this.headphones = false;
+        this.sponsored = new SimpleBooleanProperty(false);
 
 
         //Race Specific
@@ -178,6 +182,23 @@ public class Typist {
         }
     }
 
+    public int getCoins() {
+        return coins;
+    }
+
+    public void addCoins(int coins) {
+        this.coins += coins;
+    }
+
+    public boolean spendCoins(int coins) {
+        if (this.coins >= coins) {
+            this.coins -= coins;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public List<RaceStat> getRaceStats() {
         return raceStats;
     }
@@ -241,6 +262,18 @@ public class Typist {
     public void setHeadphones(boolean headphones) {
         this.headphones = headphones;
         setMistypeChanceModifier(-0.05);
+    }
+
+    public boolean isSponsored() {
+        return sponsored.get();
+    }
+
+    public BooleanProperty getSponsoredProperty() {
+        return sponsored;
+    }
+
+    public void setSponsored(boolean sponsored) {
+        this.sponsored.set(sponsored);
     }
 
     public int getProgress() {
@@ -404,6 +437,7 @@ public class Typist {
         speedBoostRemaining = 0;
         accuracyBoost.set(0);
         accuracyBoostRemaining = 0;
+        accuracyModifer = 0;
         justMistyped.set(false);
         timeTaken = 0;
     }
@@ -414,5 +448,10 @@ public class Typist {
 
     public boolean isFinished(int passageLength) {
         return getProgress() >= passageLength;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }
