@@ -45,7 +45,7 @@ public class EditTypistsView extends View {
                 navigator.navigateTo(new EditTypistsView(appState, navigator));
             });
 
-            TextField nameField = new TextField(typist.getName());
+            TextField nameField = new TextField(typist.getName() + "(" + typist.getCoins() + " coins)");
             nameField.textProperty().addListener(
                     (observable, oldValue, newValue) -> {
                         if (newValue != null && !newValue.isBlank()) typist.setName(newValue);
