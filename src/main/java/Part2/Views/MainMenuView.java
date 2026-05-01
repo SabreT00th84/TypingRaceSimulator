@@ -57,8 +57,8 @@ public class MainMenuView extends View {
         viewLeaderboard.setOnAction(e -> navigator.navigateTo(new LeaderboardView(appState, navigator)));
 
         Button viewFinLeaderboard = new Button("View Financial Leaderboard");
-        viewLeaderboard.visibleProperty().bind(appState.typistsProperty().sizeProperty().greaterThan(0));
-        viewLeaderboard.setOnAction(e -> navigator.navigateTo(new FinLeaderboardView(appState, navigator)));
+        viewFinLeaderboard.visibleProperty().bind(appState.typistsProperty().sizeProperty().greaterThan(0));
+        viewFinLeaderboard.setOnAction(e -> navigator.navigateTo(new FinLeaderboardView(appState, navigator)));
 
         vbox.getChildren().addAll(
                 errorMessage,
